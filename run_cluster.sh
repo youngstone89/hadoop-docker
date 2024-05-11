@@ -9,11 +9,11 @@ docker build -t hadoop-base:3.3.6 -f Dockerfile-hadoop .
 docker-compose -f docker-compose-hadoop.yml up -d
 
 # Run Airflow Cluster
-if [[ "$PWD" != "airflow" ]]; then
-  cd airflow && ./run_airflow.sh && cd ..
-fi
+# if [[ "$PWD" != "airflow" ]]; then
+#   cd airflow && ./run_airflow.sh && cd ..
+# fi
 
-docker-compose -f docker-compose-airflow.yml up -d
+# docker-compose -f docker-compose-airflow.yml up -d
 
 # Run Spark Cluster
 if [[ "$PWD" != "spark" ]]; then
