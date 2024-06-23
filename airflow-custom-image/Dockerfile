@@ -12,4 +12,9 @@ RUN apt update && \
 ENV JAVA_HOME /usr/lib/jvm/java-17-openjdk-amd64/
 RUN export JAVA_HOME
 
+COPY requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
+RUN rm requirements.txt
+
 USER airflow

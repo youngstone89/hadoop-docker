@@ -80,6 +80,9 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/log4j.properties:/opt/spark/conf/log4j.properties
     - ../spark-jobs:/opt/spark_jobs
   user: "${AIRFLOW_UID:-50000}:0"
+  networks:
+    - airflow_shared_network
+
   depends_on:
     &airflow-common-depends-on
     redis:
@@ -102,6 +105,8 @@ services:
       retries: 5
       start_period: 5s
     restart: always
+    networks:
+      - airflow_shared_network
 
   redis:
     image: redis:latest
@@ -114,6 +119,8 @@ services:
       retries: 50
       start_period: 30s
     restart: always
+    networks:
+      - airflow_shared_network
 
   airflow-webserver:
     <<: *airflow-common
@@ -302,3 +309,8 @@ services:
 
 volumes:
   postgres-db-volume:
+
+
+networks:
+  airflow_shared_network:
+    driver: bridge

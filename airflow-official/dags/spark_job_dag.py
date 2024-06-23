@@ -25,7 +25,7 @@ spark_job = SparkSubmitOperator(
     application='/opt/spark_jobs/spark_job_app.py',  # Path to your Spark job
     conn_id='spark_local',  # Connection ID from Airflow connections
     conf={
-        'spark.master': 'spark://localhost:7077',
+        'spark.master': 'spark://spark-master:7077',
         'spark.driver.memory': '1g',
         'spark.executor.memory': '1g',
         'spark.executor.cores': '1',
