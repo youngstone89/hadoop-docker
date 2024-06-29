@@ -1,45 +1,56 @@
 import logging
 import random
+import sys
 
 from pyspark.sql import SparkSession
 
-logging.basicConfig(level=logging.INFO, 
-                    format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger()
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
-def calculate_pi(spark, partitions):
-    def inside(_):
-        x, y = random.random(), random.random()
-        return x*x + y*y < 1
+def is_point_inside_unit_circle(_):
+    x, y = random.random(), random.random()
+    return 1 if x*x + y*y <= 1 else 0
 
-    count = spark.sparkContext.parallelize(range(1, partitions + 1), partitions).filter(inside).count()
-    return 4.0 * count / partitions
-
-if __name__ == "__main__":
+def calculate_pi(spark, num_samples=1000000):
     try:
-        # Initialize Spark session
+        # Create a DataFrame with a range of numbers
+        df = spark.range(0, num_samples)
+        
+        # Apply the function to check if points are inside the unit circle
+        count = df.rdd.map(is_point_inside_unit_circle).reduce(lambda a, b: a + b)
+        
+        # Calculate Pi
+        pi = 4 * count / num_samples
+        return pi
+    except Exception as e:
+        logger.error(f"Error in Pi calculation: {str(e)}")
+        raise
+
+def main():
+    spark = None
+    try:
+        logger.info("Initializing Spark session")
         spark = SparkSession.builder \
             .appName("CalculatePi") \
             .master("spark://spark-master:7077") \
+            .config("spark.driver.memory", "4g") \
+            .config("spark.executor.memory", "8g") \
+            .config("spark.network.timeout", "600s") \
             .getOrCreate()
 
         logger.info("Spark session created successfully")
 
-        # Number of partitions (parallel tasks)
-        partitions = 100
-        
-        # Calculate Pi
-        pi_value = calculate_pi(spark, partitions)
-        
-        # Log and print the result
-        result_message = f"Pi is roughly {pi_value}"
-        logger.info(result_message)
-        print(result_message)
+        pi = calculate_pi(spark)
+        logger.info(f"Pi is roughly {pi}")
 
     except Exception as e:
         logger.error(f"An error occurred: {str(e)}")
+        sys.exit(1)
     finally:
-        # Stop the Spark session
-        if 'spark' in locals():
+        if spark:
+            logger.info("Stopping Spark session")
             spark.stop()
-            logger.info("Spark session stopped")
+
+if __name__ == "__main__":
+    main()
